@@ -1,7 +1,8 @@
-package com.example.testsapp
+package com.example.testsapp.dummy_testing
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.example.testsapp.R
 import com.example.testsapp.dummy_tests.ResourceComparator
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
