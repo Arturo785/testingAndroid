@@ -3,7 +3,7 @@ package com.example.testsapp.data.local
 import androidx.lifecycle.LiveData
 import androidx.room.*
 
-
+@Dao
 interface ShoppingDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

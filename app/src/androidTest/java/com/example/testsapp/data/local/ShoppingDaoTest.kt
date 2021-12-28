@@ -20,7 +20,7 @@ import org.junit.runner.RunWith
 // the android framework
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
-@SmallTest() // with this we tell that this file will run unit tests only
+@SmallTest // with this we tell that this file will run unit tests only
 class ShoppingDaoTest {
 
     // thanks to this we can run our code in an asynchronous way otherwise it would be impossible
@@ -38,7 +38,7 @@ class ShoppingDaoTest {
     private lateinit var dao: ShoppingDao
 
     @Before
-    private fun setup() {
+    fun setup() {
         database = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
             ShoppingItemDatabase::class.java
