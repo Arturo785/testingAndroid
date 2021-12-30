@@ -1,26 +1,28 @@
 package com.example.testsapp.data.local
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.room.Room
-import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.example.testsapp.getOrAwaitValue
+import com.example.testsapp.launchFragmentInHiltContainer
+import com.example.testsapp.ui.fragments.ShoppingFragment
 import com.google.common.truth.Truth.assertThat
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
+import javax.inject.Inject
+import javax.inject.Named
 
 
 // This is because the Junit class needs to gather data from
 // the android framework
 @ExperimentalCoroutinesApi
-@RunWith(AndroidJUnit4::class)
 @SmallTest // with this we tell that this file will run unit tests only
+@HiltAndroidTest
 class ShoppingDaoTest {
 
     // thanks to this we can run our code in an asynchronous way otherwise it would be impossible
@@ -28,21 +30,24 @@ class ShoppingDaoTest {
     @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()
 
+    @get:Rule
+    var hiltRule = HiltAndroidRule(this)
+
 
     // the pyramid goes like this
     // top is UI testing
     // middle is Instrumentation testing
     // the base is unit testing
 
-    private lateinit var database: ShoppingItemDatabase
+    @Inject
+    @Named("test_db")
+    lateinit var database: ShoppingItemDatabase
+
     private lateinit var dao: ShoppingDao
 
     @Before
     fun setup() {
-        database = Room.inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext(),
-            ShoppingItemDatabase::class.java
-        ).allowMainThreadQueries().build()
+        hiltRule.inject() // this gives the init of the injection
 
         dao = database.shoppingDao()
     }
