@@ -6,12 +6,15 @@ import androidx.navigation.Navigation
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.filters.MediumTest
 import com.example.testsapp.*
+import com.example.testsapp.data.local.ShoppingItem
 import com.example.testsapp.repositories.FakeShoppingRepositoryShared
 import com.example.testsapp.ui.ShoppingViewModel
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,6 +23,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
+import javax.inject.Inject
 
 @MediumTest
 @HiltAndroidTest
@@ -37,6 +41,9 @@ class AddShoppingItemFragmentTest {
     // access in tests, that's why we create our own scope
     @get:Rule
     var mainCoroutineRule = MainCoroutineRuleShared() // comes from testing shared directory
+
+    @Inject
+    lateinit var fragmentFactory: ShoppingFragmentFactory
 
     @Before
     fun setup() {
@@ -93,5 +100,30 @@ class AddShoppingItemFragmentTest {
         Truth.assertThat(valueImage).isEmpty()
     }
 
+
+    @Test
+    fun clickInsertIntoDb_shoppingItemInsertedIntoDb() {
+        val testViewModel = ShoppingViewModel(FakeShoppingRepositoryShared())
+
+        launchFragmentInHiltContainer<AddShoppingItemFragment>(
+            // we pass the factory because our fragment uses dependency injection
+            fragmentFactory = fragmentFactory
+        ) {
+            viewModel = testViewModel
+        }
+
+        // puts text into the edit texts
+        onView(withId(R.id.etShoppingItemName)).perform(replaceText("shopping item"))
+        onView(withId(R.id.etShoppingItemAmount)).perform(replaceText("5"))
+        onView(withId(R.id.etShoppingItemPrice)).perform(replaceText("5.5"))
+
+
+        // this button is supposed to call the view model and to perform the
+        // insertion
+        onView(withId(R.id.btnAddShoppingItem)).perform(click())
+
+        assertThat(testViewModel.shoppingItems.getOrAwaitValue())
+            .contains(ShoppingItem("shopping item", 5, 5.5f, ""))
+    }
 
 }

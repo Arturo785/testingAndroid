@@ -1,13 +1,21 @@
 package com.example.testsapp.ui.fragments
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.swipeLeft
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.filters.MediumTest
 import com.example.testsapp.R
+import com.example.testsapp.adapters.ShoppingItemAdapter
+import com.example.testsapp.data.local.ShoppingItem
+import com.example.testsapp.getOrAwaitValue
 import com.example.testsapp.launchFragmentInHiltContainer
+import com.example.testsapp.ui.ShoppingViewModel
+import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,6 +24,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
+import javax.inject.Inject
 
 
 @MediumTest
@@ -27,10 +36,43 @@ class ShoppingFragmentTest {
     @get:Rule
     var hiltRule = HiltAndroidRule(this)
 
+    @get:Rule
+    var instantTaskExecutorRule = InstantTaskExecutorRule()
+
     @Before
     fun setup() {
         hiltRule.inject()
     }
+
+    @Inject
+    lateinit var testFragmentFactory: TestShoppingFragmentFactory
+
+
+    @Test
+    fun swipeShoppingItem_deleteItemInDb() {
+        val shoppingItem = ShoppingItem("TEST", 1, 1f, "TEST", 1)
+        var testViewModel: ShoppingViewModel? = null
+
+        launchFragmentInHiltContainer<ShoppingFragment>(
+            fragmentFactory = testFragmentFactory
+        ) {
+            testViewModel = viewModel // this is the injected that comes from the
+            // factory that we just passed
+            viewModel?.insertShoppingItemIntoDb(shoppingItem)
+        }
+
+
+        // pretend to erase the item from the recycler
+        onView(withId(R.id.rvShoppingItems)).perform(
+            RecyclerViewActions.actionOnItemAtPosition<ShoppingItemAdapter.ShoppingItemViewHolder>(
+                0,
+                swipeLeft()
+            )
+        )
+
+        assertThat(testViewModel?.shoppingItems?.getOrAwaitValue()).doesNotContain(shoppingItem)
+    }
+
 
     @Test
     fun clickAddShoppingItemButton_navigateToAddShoppingItemFragment() {
